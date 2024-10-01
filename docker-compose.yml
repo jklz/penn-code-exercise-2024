@@ -1,6 +1,6 @@
 version: '3'
 services:
-  db:
+  mysql-db:
     image: mysql:5.7
     environment:
       MYSQL_ROOT_PASSWORD: my_secret_pw
@@ -10,27 +10,41 @@ services:
       - "3306:3306"
     volumes:
       - ./.docker/sql/:/docker-entrypoint-initdb.d/
+    networks:
+      bridge:
+        aliases:
+          - "db.local"
   web:
     image: nginx
-
     volumes:
+      # nginx site config
       - .docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      # public root
       - ./public/:/var/www/html/public
     depends_on:
-      - db
+      - mysql-db
       - php-fpm
     ports:
       - "80:80"
+    networks:
+      bridge:
+        aliases:
+          - "web.local"
   php-fpm:
-    image: php:8.2-fpm
+    build: .docker/php/.
+    environment:
+      MYSQL_HOST: db.local
     env_file:
       - .docker/db.env
     depends_on:
-      - db
+      - mysql-db
     volumes:
       - .:/var/www/html/
-#      - ./public/:/var/www/html
-#      - ./app/:/var/www/app
-#      - ./vendor:/var/www/vendor
     ports:
       - ":9000"
+    networks:
+      bridge:
+        aliases:
+          - "php-fpm.local"
+networks:
+  bridge:

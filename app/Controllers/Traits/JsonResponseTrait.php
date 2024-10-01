@@ -39,7 +39,7 @@ trait JsonResponseTrait
     private function notFoundErrorJsonResponse(string $resource = 'resource', \Slim\Psr7\Response $response = null): \Slim\Psr7\Response|\Psr\Http\Message\ResponseInterface
     {
         $message = $resource . ' not found.';
-        return $this->errorsJsonResponseWithCode(404, $message, $response);
+        return $this->errorsJsonResponseWithCode(StatusCodeInterface::STATUS_NOT_FOUND, $message, $response);
     }
 
     private function internalErrorJsonResponse(\Slim\Psr7\Response $response = null): \Slim\Psr7\Response|\Psr\Http\Message\ResponseInterface
@@ -47,7 +47,7 @@ trait JsonResponseTrait
         return $this->errorsJsonResponseWithCode(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR, 'Internal Server Error', $response);
     }
 
-    private function toJsonResponse($responseBody, int $statusCode = 200, \Slim\Psr7\Response $response = null): \Slim\Psr7\Response|\Psr\Http\Message\ResponseInterface
+    private function toJsonResponse($responseBody, int $statusCode = StatusCodeInterface::STATUS_OK, \Slim\Psr7\Response $response = null): \Slim\Psr7\Response|\Psr\Http\Message\ResponseInterface
     {
         // make sure we have a response
         $response ??= new \Slim\Psr7\Response();

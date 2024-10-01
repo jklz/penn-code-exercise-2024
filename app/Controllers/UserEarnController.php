@@ -7,6 +7,7 @@ use App\Controllers\Traits\RequestValidationTrait;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
 use App\ViewServices\UserViewService;
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -51,7 +52,7 @@ class UserEarnController
         $jsonBody = [
             'data' => $user
         ];
-        return $this->toJsonResponse($jsonBody, 201, $response);
+        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_CREATED, $response);
     }
 
 }

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\Traits\JsonResponseTrait;
 use App\Controllers\Traits\RequestValidationTrait;
+use App\Repositories\UserRepository;
 use App\Services\UserService;
 use App\ViewServices\Exception\ResourceNotFoundException;
 use App\ViewServices\UserViewService;
@@ -20,6 +21,7 @@ class UserController
     public function __construct(
         protected UserService $userService,
         protected UserViewService $userViewService,
+        protected UserRepository $userRepository,
     )
     {
     }
@@ -33,7 +35,7 @@ class UserController
             'data' => $usersList
         ];
 
-        return $this->toJsonResponse($jsonBody, 200, $response);
+        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_OK, $response);
 
     }
 
@@ -56,7 +58,7 @@ class UserController
             return $this->internalErrorJsonResponse($response);
         }
 
-        return $this->toJsonResponse($jsonBody, 200, $response);
+        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_OK, $response);
     }
 
     public function create(Request $request, Response $response)
@@ -82,17 +84,24 @@ class UserController
             return $this->internalErrorJsonResponse($response);
         }
 
-        return $this->toJsonResponse($jsonBody, 201, $response);
+        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_CREATED, $response);
     }
 
 
     public function delete(Request $request, Response $response)
     {
+        $userId = $request->getAttribute('userId');
 
-//        $response->withStatus(200)
-//            ->getBody()
-//            ->write(json_encode(['data' => ['user1', 'user2']]));
+        //verify user exists
+        $doesUserExist = $this->userRepository
+            ->doesUserExistById($userId);
+        if (!$doesUserExist) {
+            return $this->notFoundErrorJsonResponse('User');
+        }
 
-//        return $response;
+        $this->userService
+            ->removeUser($userId);
+
+        return $this->toJsonResponse('', StatusCodeInterface::STATUS_NO_CONTENT, $response);
     }
 }

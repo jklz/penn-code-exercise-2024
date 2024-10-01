@@ -23,4 +23,10 @@ class UserService
 
         return $newUser;
     }
+
+    public function removeUser(int $userId): void
+    {
+        $this->userRepository
+            ->removeUserById($userId);
+    }
 }

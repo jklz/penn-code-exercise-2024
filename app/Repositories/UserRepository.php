@@ -28,7 +28,7 @@ class UserRepository
 
         $result = $this->databaseService
             ->fetchRow(
-                'SELECT * FROM users WHERE id=? LIMIT 1',
+                'SELECT * FROM users WHERE id=? AND is_active = 1 LIMIT 1',
                 [$userId]
             );
 
@@ -43,7 +43,7 @@ class UserRepository
     {
         $userCountForId = $this->databaseService
             ->fetchValue(
-                'SELECT count(*) FROM users WHERE id= ?',
+                'SELECT count(*) FROM users WHERE id= ? AND is_active = 1',
                 [$userId]
             );
         return ($userCountForId === 1);
@@ -59,5 +59,12 @@ class UserRepository
             );
 
         return $newUserId;
+    }
+
+    public function removeUserById(int $userId)
+    {
+        $sql = 'UPDATE users SET is_active = 0 WHERE id=? AND is_active = 1';
+        $this->databaseService
+            ->execute($sql, [$userId]);
     }
 }

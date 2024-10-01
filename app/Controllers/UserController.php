@@ -2,48 +2,97 @@
 
 namespace App\Controllers;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Controllers\Traits\JsonResponseTrait;
+use App\Controllers\Traits\RequestValidationTrait;
+use App\Services\UserService;
+use App\ViewServices\Exception\ResourceNotFoundException;
+use App\ViewServices\UserViewService;
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use function DI\string;
+
 class UserController
 {
-    public function getList(Request $request, Response $response)
+    use JsonResponseTrait;
+    use RequestValidationTrait;
+
+    public function __construct(
+        protected UserService $userService,
+        protected UserViewService $userViewService,
+    )
     {
-
-        $response->withStatus(200)
-            ->getBody()
-            ->write(json_encode(['data' => ['user1', 'user2']]));
-
-        return $response;
     }
 
-    public function get(Request $request, Response $response, array $args)
+    public function getList(Request $request, Response $response)
+    {
+        $usersList = $this->userViewService
+            ->listAllUsers();
+
+        $jsonBody = [
+            'data' => $usersList
+        ];
+
+        return $this->toJsonResponse($jsonBody, 200, $response);
+
+    }
+
+    public function get(Request $request, Response $response)
     {
 
-        $response->withStatus(200)
-            ->getBody()
-            ->write(json_encode(['data' => $args]));
+        $userId = $request->getAttribute('userId');
 
-        return $response;
+        try {
+
+            $user = $this->userViewService
+                ->getUser($userId);
+
+            $jsonBody = [
+                'data' => $user
+            ];
+        } catch (ResourceNotFoundException $exception) {
+            return $this->notFoundErrorJsonResponse('User', $response);
+        } catch (\Exception $exception) {
+            return $this->internalErrorJsonResponse($response);
+        }
+
+        return $this->toJsonResponse($jsonBody, 200, $response);
     }
 
     public function create(Request $request, Response $response)
     {
+        // configure field validation
+        $this->addJsonFieldForValidation('name', 'Name', 'string', true);
+        $this->addJsonFieldForValidation('email', 'email address', 'string', true);
 
-        $response->withStatus(200)
-            ->getBody()
-            ->write(json_encode(['data' => ['user1', 'user2']]));
+        // check validation
+        if (!$this->isJsonBodyValidationSuccessful($request)) {
+            return $this->errorJsonBodyValidationJsonResponse($response);
+        }
 
-        return $response;
+        $validatedValues = $this->getValidatedJsonBodyValues();
+
+        try {
+            $newUser = $this->userViewService
+                ->createUser($validatedValues['name'], $validatedValues['email']);
+            $jsonBody = [
+                'data' => $newUser
+            ];
+        } catch (\Exception $exception) {
+            return $this->internalErrorJsonResponse($response);
+        }
+
+        return $this->toJsonResponse($jsonBody, 201, $response);
     }
 
 
-    public function delete(Request $request, Response $response, array $args)
+    public function delete(Request $request, Response $response)
     {
 
-        $response->withStatus(200)
-            ->getBody()
-            ->write(json_encode(['data' => ['user1', 'user2']]));
+//        $response->withStatus(200)
+//            ->getBody()
+//            ->write(json_encode(['data' => ['user1', 'user2']]));
 
-        return $response;
+//        return $response;
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Exceptions\Http;
 
-use App\Exceptions\Http\HttpException;
-
 class ValidationHttpException extends HttpException
 {
     /**

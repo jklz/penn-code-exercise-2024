@@ -6,6 +6,11 @@
             "App\\": "app/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "AppTests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Jared Spencer",

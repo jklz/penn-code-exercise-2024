@@ -27,11 +27,6 @@ $errorMiddleware = $app->addErrorMiddleware(false, true, true);
 $errorMiddleware->setDefaultErrorHandler([App\Controllers\ErrorController::class, "handleException"]);
 
 // configure routes
-$app->get('/', function (Request $request, Response $response){
-   $response->getBody()
-    ->write('root of app');
-   return $response;
-});
 
 $app->group('/users', function (RouteCollectorProxy $usersRouteGroup) {
     // get list of all users

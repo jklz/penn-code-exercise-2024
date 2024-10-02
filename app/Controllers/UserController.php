@@ -29,11 +29,7 @@ class UserController
         $usersList = $this->userViewService
             ->listAllUsers();
 
-        $jsonBody = [
-            'data' => $usersList
-        ];
-
-        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_OK, $response);
+        return $this->toJsonDataResponse($usersList, StatusCodeInterface::STATUS_OK, $response);
 
     }
 

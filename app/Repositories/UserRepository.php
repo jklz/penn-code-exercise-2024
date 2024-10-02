@@ -2,15 +2,13 @@
 
 namespace App\Repositories;
 
-use App\Models\User;
 use App\Services\DatabaseService;
-use PDO;
 
 class UserRepository
 {
 
     public function __construct(
-        private DatabaseService $databaseService
+        private readonly DatabaseService $databaseService
     )
     {
     }

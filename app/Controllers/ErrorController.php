@@ -2,14 +2,17 @@
 
 namespace App\Controllers;
 use App\Controllers\Traits\JsonResponseTrait;
+use App\Exceptions\Http\HttpException;
 use Fig\Http\Message\StatusCodeInterface;
-use Slim\Exception\HttpException;
+use Slim\Exception\HttpException AS SlimHttpException;
 
 class ErrorController
 {
     use JsonResponseTrait;
 
-    public function error(
+
+
+    public function handleException(
         \Psr\Http\Message\ServerRequestInterface $request,
         \Throwable $exception,
         bool $displayErrorDetails,
@@ -17,19 +20,18 @@ class ErrorController
         bool $logErrorDetails
     ): \Slim\Psr7\Response|\Psr\Http\Message\ResponseInterface
     {
-        // check if exception is should contain status code and message for response
-        $isSlimHttpException = ($exception instanceof HttpException);
 
-        if ($isSlimHttpException){
-            // get error code and message from exception
-            $code = $exception->getCode();
-            $message = $exception->getMessage();
-        } else {
-            // output generic error code and message
-            $code = 500;
-            $message = "something went wrong. " . $exception->getMessage();
+        // check if exception extends HttpException
+        if ($exception instanceof HttpException) {
+            return $this->errorJsonResponseFromHttpException($exception);
         }
 
-        return $this->errorsJsonResponseWithCode($code, $message);
+        // check if exception extends SlimHttpException
+        if ($exception instanceof SlimHttpException) {
+            return $this->errorJsonResponseFromSlimHttpException($exception);
+        }
+
+        $message = "something went wrong. " . $exception->getMessage();
+        return $this->errorsJsonResponseWithCode(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR, $message);
     }
 }

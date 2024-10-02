@@ -2,12 +2,13 @@
 
 namespace App\ViewServices;
 
-use App\Models\User;
+use App\Exceptions\Http\FailedToCreateResourceHttpException;
+use App\Exceptions\Http\ResourceNotFoundHttpException;
 use App\Repositories\UserPointsActivityRepository;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
 use App\ViewModels\UserViewModel;
-use App\ViewServices\Exception\ResourceNotFoundException;
+
 
 class UserViewService
 {
@@ -43,7 +44,21 @@ class UserViewService
     }
 
     /**
-     * @throws ResourceNotFoundException
+     * check that user exists
+     * @throws ResourceNotFoundHttpException
+     */
+    public function verifyUserExists(int $userId): void
+    {
+        $doesUserExists = $this->userRepository
+            ->doesUserExistById($userId);
+
+        if (!$doesUserExists) {
+            throw new ResourceNotFoundHttpException('User');
+        }
+    }
+
+    /**
+     * @throws ResourceNotFoundHttpException
      */
     public function getUser(int $userId): UserViewModel
     {
@@ -51,39 +66,76 @@ class UserViewService
             ->getUserById($userId);
 
         if (!isset($user)) {
-            throw new ResourceNotFoundException();
+            throw new ResourceNotFoundHttpException('User');
         }
 
         return $this->userToViewModel($user);
     }
 
+    /**
+     * @throws FailedToCreateResourceHttpException
+     */
     public function createUser(string $name, string $email): UserViewModel
     {
         $user = $this->userService
             ->createUser($name, $email);
 
         if (!isset($user)) {
-            throw new ResourceNotFoundException();
+            throw new FailedToCreateResourceHttpException('User');
         }
 
         return $this->userToViewModel($user);
     }
 
+    /**
+     * @throws ResourceNotFoundHttpException
+     */
+    public function removeUser(int $userId): void
+    {
+        $this->verifyUserExists($userId);
+
+        $this->userService
+            ->removeUser($userId);
+    }
+
+    /**
+     * @throws ResourceNotFoundHttpException
+     * @throws FailedToCreateResourceHttpException
+     */
     public function createPointsEarnedForUser(int $userId, int $points, string $description): UserViewModel
     {
-        $this->pointsActivityRepository
-            ->createPointsEarnedActivity($userId, $points, $description);
+        // make sure user Exists
+        $this->verifyUserExists($userId);
 
-        $user = $this->userRepository
+        try {
+            $this->pointsActivityRepository
+                ->createPointsEarnedActivity($userId, $points, $description);
+        }catch (\Exception $exception) {
+            throw new FailedToCreateResourceHttpException();
+        }
+
+
+            $user = $this->userRepository
             ->getUserById($userId);
 
         return $this->userToViewModel($user);
     }
 
+    /**
+     * @throws ResourceNotFoundHttpException
+     * @throws FailedToCreateResourceHttpException
+     */
     public function createPointsRedeemedForUser(int $userId, int $points, string $description): UserViewModel
     {
-        $this->pointsActivityRepository
-            ->createPointsRedeemedActivity($userId, $points, $description);
+        // make sure user Exists
+        $this->verifyUserExists($userId);
+
+        try {
+            $this->pointsActivityRepository
+                ->createPointsRedeemedActivity($userId, $points, $description);
+        } catch (\Exception $exception) {
+            throw new FailedToCreateResourceHttpException();
+        }
 
         $user = $this->userRepository
             ->getUserById($userId);

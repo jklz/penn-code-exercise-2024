@@ -8,7 +8,7 @@ class UserPointsActivityRepository
 {
 
     public function __construct(
-        private DatabaseService $databaseService
+        private readonly DatabaseService $databaseService
     )
     {
     }

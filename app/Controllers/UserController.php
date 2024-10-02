@@ -4,14 +4,13 @@ namespace App\Controllers;
 
 use App\Controllers\Traits\JsonResponseTrait;
 use App\Controllers\Traits\RequestValidationTrait;
-use App\Repositories\UserRepository;
-use App\Services\UserService;
-use App\ViewServices\Exception\ResourceNotFoundException;
+use App\Exceptions\Http\FailedToCreateResourceHttpException;
+use App\Exceptions\Http\ValidationHttpException;
+use App\Services\ValidationService;
 use App\ViewServices\UserViewService;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use function DI\string;
 
 class UserController
 {
@@ -19,14 +18,13 @@ class UserController
     use RequestValidationTrait;
 
     public function __construct(
-        protected UserService $userService,
+        protected ValidationService $validationService,
         protected UserViewService $userViewService,
-        protected UserRepository $userRepository,
     )
     {
     }
 
-    public function getList(Request $request, Response $response)
+    public function getList(Request $request, Response $response): \Slim\Psr7\Response|Response
     {
         $usersList = $this->userViewService
             ->listAllUsers();
@@ -39,69 +37,50 @@ class UserController
 
     }
 
-    public function get(Request $request, Response $response)
+    public function get(Request $request, Response $response): \Slim\Psr7\Response|Response
     {
-
         $userId = $request->getAttribute('userId');
 
-        try {
-
-            $user = $this->userViewService
+        $user = $this->userViewService
                 ->getUser($userId);
 
-            $jsonBody = [
-                'data' => $user
-            ];
-        } catch (ResourceNotFoundException $exception) {
-            return $this->notFoundErrorJsonResponse('User', $response);
-        } catch (\Exception $exception) {
-            return $this->internalErrorJsonResponse($response);
-        }
-
-        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_OK, $response);
+        return $this->toJsonDataResponse($user, StatusCodeInterface::STATUS_OK, $response);
     }
 
-    public function create(Request $request, Response $response)
+    /**
+     * @throws FailedToCreateResourceHttpException
+     * @throws ValidationHttpException
+     */
+    public function create(Request $request, Response $response): \Slim\Psr7\Response|Response
     {
         // configure field validation
-        $this->addJsonFieldForValidation('name', 'Name', 'string', true);
-        $this->addJsonFieldForValidation('email', 'email address', 'string', true);
+        $this->validationService
+            ->addFieldConfig('name', 'Name', 'string', true)
+            ->addFieldConfig('email', 'email address', 'string', true);
 
         // check validation
-        if (!$this->isJsonBodyValidationSuccessful($request)) {
-            return $this->errorJsonBodyValidationJsonResponse($response);
-        }
+        $this->validateJsonBodyValues($request);
 
-        $validatedValues = $this->getValidatedJsonBodyValues();
+        // get validated values
+        $name = $this->validationService
+            ->getSafeValue('name');
+        $email = $this->validationService
+            ->getSafeValue('email');
 
-        try {
-            $newUser = $this->userViewService
-                ->createUser($validatedValues['name'], $validatedValues['email']);
-            $jsonBody = [
-                'data' => $newUser
-            ];
-        } catch (\Exception $exception) {
-            return $this->internalErrorJsonResponse($response);
-        }
+        $newUser = $this->userViewService
+                ->createUser($name, $email);
 
-        return $this->toJsonResponse($jsonBody, StatusCodeInterface::STATUS_CREATED, $response);
+        return $this->toJsonDataResponse($newUser, StatusCodeInterface::STATUS_CREATED, $response);
     }
 
 
-    public function delete(Request $request, Response $response)
+    public function delete(Request $request, Response $response): \Slim\Psr7\Response|Response
     {
         $userId = $request->getAttribute('userId');
 
-        //verify user exists
-        $doesUserExist = $this->userRepository
-            ->doesUserExistById($userId);
-        if (!$doesUserExist) {
-            return $this->notFoundErrorJsonResponse('User');
-        }
-
-        $this->userService
+        $this->userViewService
             ->removeUser($userId);
 
-        return $this->toJsonResponse('', StatusCodeInterface::STATUS_NO_CONTENT, $response);
+        return $this->toJsonResponse(null, StatusCodeInterface::STATUS_NO_CONTENT, $response);
     }
 }

@@ -23,8 +23,8 @@ $app->add(JsonBodyParserMiddleware::class);
 $app->addRoutingMiddleware();
 
 // setup error handling via middleware
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler([App\Controllers\ErrorController::class, "error"]);
+$errorMiddleware = $app->addErrorMiddleware(false, true, true);
+$errorMiddleware->setDefaultErrorHandler([App\Controllers\ErrorController::class, "handleException"]);
 
 // configure routes
 $app->get('/', function (Request $request, Response $response){
@@ -48,10 +48,7 @@ $app->group('/users', function (RouteCollectorProxy $usersRouteGroup) {
 
         $singleUserRouteGroup->post('/earn', [App\Controllers\UserEarnController::class, "create"]);
         $singleUserRouteGroup->post('/redeem', [App\Controllers\UserRedeemController::class, "create"]);
-
     });
 });
-
-//$app->
 
 $app->run();

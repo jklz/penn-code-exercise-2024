@@ -75,8 +75,8 @@ class UserViewServiceTest extends TestCase
         $pointsEarned = 500;
         $description = "test-description";
 
-        // setup mock response data
-        $mockedGetUserResponse = [
+        // setup mock result data
+        $mockedGetUserResult = [
             'id' => $userId,
             'is_active' => 1,
             'name' => 'name',
@@ -97,7 +97,7 @@ class UserViewServiceTest extends TestCase
         $userRepositoryMock->expects($this->once())
             ->method('getUserById')
             ->with($userId)
-            ->willReturn($mockedGetUserResponse);
+            ->willReturn($mockedGetUserResult);
 
         // create mock of UserPointsActivityRepository
         $userPointsActivityRepositoryMock = $this->createPartialMock(UserPointsActivityRepository::class, ['createPointsEarnedActivity']);
@@ -125,7 +125,7 @@ class UserViewServiceTest extends TestCase
     public function testListAllUsers()
     {
         // setup mock result data
-        $mockedGetAllUserResponse = [
+        $mockedGetAllUserResult = [
             [
                 'id' => 1,
                 'is_active' => 1,
@@ -149,7 +149,7 @@ class UserViewServiceTest extends TestCase
         $userRepositoryMock->expects($this->once())
             ->method('getAll')
             ->with()
-            ->willReturn($mockedGetAllUserResponse);
+            ->willReturn($mockedGetAllUserResult);
 
         // new instance of UserViewService using our mocks
         $userViewService = new UserViewService(
@@ -162,7 +162,7 @@ class UserViewServiceTest extends TestCase
         $userListResult = $userViewService->listAllUsers();
 
         // verify return count is the same as the configured mock result data
-        $this->assertCount(count($mockedGetAllUserResponse), $userListResult);
+        $this->assertCount(count($mockedGetAllUserResult), $userListResult);
 
         foreach ($userListResult AS $user) {
             // verify each item in result is instance of UserViewModel
@@ -178,7 +178,7 @@ class UserViewServiceTest extends TestCase
         $description = "test-description";
 
         // setup mock result data
-        $mockedGetUserResponse = [
+        $mockedGetUserResult = [
             'id' => $userId,
             'is_active' => 1,
             'name' => 'name',
@@ -199,7 +199,7 @@ class UserViewServiceTest extends TestCase
         $userRepositoryMock->expects($this->once())
             ->method('getUserById')
             ->with($userId)
-            ->willReturn($mockedGetUserResponse);
+            ->willReturn($mockedGetUserResult);
 
         // create mock of UserPointsActivityRepository
         $userPointsActivityRepositoryMock = $this->createPartialMock(UserPointsActivityRepository::class, ['createPointsRedeemedActivity']);
@@ -261,7 +261,7 @@ class UserViewServiceTest extends TestCase
         $userId = 14;
 
         // setup mock result data
-        $mockedGetUserResponse = [
+        $mockedGetUserResult = [
             'id' => $userId,
             'is_active' => 1,
             'name' => 'name',
@@ -276,7 +276,7 @@ class UserViewServiceTest extends TestCase
         $userRepositoryMock->expects($this->once())
             ->method('getUserById')
             ->with($userId)
-            ->willReturn($mockedGetUserResponse);
+            ->willReturn($mockedGetUserResult);
 
         // new instance of UserViewService using our mocks
         $userViewService = new UserViewService(
@@ -298,7 +298,7 @@ class UserViewServiceTest extends TestCase
         $userId = 5;
 
         // setup mock result data
-        $mockedGetUserResponse = [
+        $mockedGetUserResult = [
             'id' => $userId,
             'is_active' => 1,
             'name' => $userName,
@@ -314,7 +314,7 @@ class UserViewServiceTest extends TestCase
         $userServiceMock->expects($this->once())
             ->method('createUser')
             ->with($userName, $userEmail)
-            ->willReturn($mockedGetUserResponse);
+            ->willReturn($mockedGetUserResult);
 
         // new instance of UserViewService using our mocks
         $userViewService = new UserViewService(
